@@ -1,36 +1,51 @@
 # PHP Test Runner Docker Image
 
-This repository provides a Docker image for running Laravel applications with support for PHP, Node.js, and various extensions. It also includes Goss for validating the image.
+CLI image for running Laravel (and similar PHP) test suites. Includes PHP,
+Composer, Node.js, Yarn, MariaDB client, Git, and common PHP extensions.
+
+Published as `danielzzzz/php-test-runner`.
 
 ## Features
 
-- PHP (dynamic versioning)
-- Node.js (dynamic versioning)
-- MariaDB Client
-- Git
-- Various PHP extensions installed
+- PHP version via `PHP_VERSION` build arg (default `8.2`)
+- Node.js major version via `NODE_MAJOR` build arg (default `18`)
+- Composer, Yarn (via Corepack), MariaDB client, Git
+- Extensions: ldap, opcache, zip, pdo_mysql, redis, exif, bcmath, gd, intl, imagick, xdebug
+- Xdebug off by default (`xdebug.mode=off`); enable per run when needed
+- ImageMagick policy with resource caps; PS/PDF/EPS/XPS enabled for PDF tests
 
 ## Using the image
-In your Dockerfile
-```
+
+```dockerfile
 FROM danielzzzz/php-test-runner:8.2
 
 COPY . .
 
-RUN php composer.phar test
-
+RUN composer test
 ```
 
-## Getting Started
-
-### Prerequisites
-
-- Docker installed on your machine
-- Make (optional for using the Makefile)
-
-### Building the Docker Image
-
-You can build the Docker image using the following command:
+Coverage example:
 
 ```bash
-docker build -t my-laravel-image --build-arg PHP_VERSION=8.2 --build-arg NODE_VERSION=18.x .
+docker run --rm -v "$PWD":/app -w /app \
+  -e XDEBUG_MODE=coverage \
+  danielzzzz/php-test-runner:8.2 \
+  composer test
+```
+
+## Building
+
+```bash
+docker build -t danielzzzz/php-test-runner:8.2 \
+  --build-arg PHP_VERSION=8.2 \
+  --build-arg NODE_MAJOR=18 \
+  .
+```
+
+Or with Make:
+
+```bash
+make docker-build VERSION=8.2 NODE_MAJOR=18
+make docker-push VERSION=8.2   # requires docker login first
+make build-all                 # 7.4, 8.1, 8.2, 8.3, 8.4, 8.5
+```
